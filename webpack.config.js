@@ -45,7 +45,7 @@ module.exports = {
 
       filename: "moduleEntry.js",
       exposes: {
-        "./OrderPage": "./src/OrderPage"
+        "./MenuPage": "./src/MenuPage"
       },
       shared: {
         ...dependencies,

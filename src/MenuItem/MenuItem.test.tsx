@@ -1,7 +1,7 @@
 // import { render } from "@testing-library/react";
-// import { OrderPage } from "./OrderPage";
+// import { MenuItem } from "./MenuItem";
 
-describe("OrderPage", () => {
+describe("MenuItem", () => {
   it("example test", () => {
     expect(true).toBe(true);
   });

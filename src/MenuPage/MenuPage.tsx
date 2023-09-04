@@ -1,6 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import MenuItem from "../MenuItem";
 
-import styles from "./OrderPage.styles";
+import styles from "./MenuPage.styles";
+
+interface Product {
+
+}
 
 const COLLECTIONS_QUERY = {
   variables: {
@@ -55,7 +60,9 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
   fragment ProductItem on Product {
     id
     handle
+    tags
     title
+    description
     featuredImage {
       id
       altText
@@ -120,16 +127,18 @@ const SINGLE_COLLECTION_QUERY = (handle: string) => ({
   }
 ` as const,
   variables: { handle, first: 10 }
-})
+});
 
 /**
  *
  * @param param0
  * @returns
  */
-const OrderPage = ({ scopedT: t, shopifyFetch }) => {
+const MenuPage = (SDK) => {
   const [week, setWeek] = useState<string>("");
-  const [product, setProduct] = useState<string>("");
+  const [products, setProducts] = useState<Product[]>([]);
+  const { scopedT: t, shopifyFetch, components } = SDK;
+  const { Loader } = components;
 
   useEffect(() => {
     shopifyFetch(COLLECTIONS_QUERY).then(res => setWeek(res.data.collections.nodes[0].handle));
@@ -138,21 +147,31 @@ const OrderPage = ({ scopedT: t, shopifyFetch }) => {
   useEffect(() => {
     if (week !== "") {
       shopifyFetch((SINGLE_COLLECTION_QUERY(week))).then(res => {
-        const products = res.data.collection.products.nodes;
-        const index = Math.floor(Math.random() * products.length);
-
-        setProduct(products[index].title);
+        console.log(res.data)
+        setProducts(res.data.collection.products.nodes);
       });
     }
   }, [week]);
 
-  return (
+
+  const deliveryDate = useMemo(() => {
+    const [y, w] = week.split("-w");
+    const date = new Date(y, 0, (1 + (parseInt(w) - 1) * 7));
+    date.setDate(date.getDate() + 21 + 2); // + 3 weeks + 2 for tuesday
+
+    return date;
+  }, [week]);
+
+  return Number.isNaN(deliveryDate.valueOf()) ? <Loader /> : (
     <div className={styles.wrapper}>
-      <div>{t("INTRO")}</div>
-      <div>{t("MAYBE_FROM_WEEK", { week })}</div>
-      <div>{t("MAYBE_PRODUCT", { product })}</div>
+      <h2 className={styles.deliveryDateHeader}>
+        {t("DELIVERY_DATE", { date: deliveryDate.toDateString()})}
+      </h2>
+      <ul className={styles.menuGrid}>
+        {products.map((p, i) => <MenuItem key={i} product={p} t={t} />)}
+      </ul>
     </div>
   );
 };
 
-export default OrderPage;
+export default MenuPage;
